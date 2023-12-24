@@ -13,6 +13,9 @@ dist/
 .vessel/
 build/
 
+# configuration files
+.env.*
+
 # generated files
 src/assets/*.html
 

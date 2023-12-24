@@ -30,9 +30,7 @@ function existingPaymentLink() {
     throw "NoExistingPaymentLink";
   }
   let recipient = input_recipient.value.trim();
-  //return `https://buy.stripe.com/test_aEUcQ07m26fxdry7ss?client_reference_id=${recipient}_${sessionId}`;
-  //return `https://buy.stripe.com/4gwcNggemb706sg4gg?client_reference_id=${recipient}_${sessionId}`;
-  return `https://buy.stripe.com/6oE4gK2nw0sm2c0cMN?client_reference_id=${recipient}_${sessionId}`;
+  return `${process.env.PAYMENT_LINK_URL}?client_reference_id=${recipient}_${sessionId}`;
 }
 
 ///////////////////////////////////////////////////////////////////////////

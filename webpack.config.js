@@ -4,6 +4,7 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const FaviconsWebpackPlugin = require("favicons-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
+const Dotenv = require("dotenv-webpack");
 
 module.exports = (env) => ({
   entry: "./src/frontend/index.js",
@@ -46,6 +47,9 @@ module.exports = (env) => ({
     ],
   },
   plugins: [
+    new Dotenv({
+      path: `./.env.${env.local ? "local" : "production"}`,
+    }),
     new webpack.DefinePlugin({
       API_HOST: JSON.stringify(env.local ? "" : "https://icp0.io"),
     }),
@@ -88,7 +92,11 @@ module.exports = (env) => ({
     server: "https",
     watchFiles: [path.resolve(__dirname, "src", "frontend")],
     proxy: {
-      "/status": { target: "https://cycle.express", secure: false, changeOrigin: true },
+      "/status": {
+        target: "https://cycle.express",
+        secure: false,
+        changeOrigin: true,
+      },
       "/api": { target: "https://icp0.io", secure: false, changeOrigin: true },
     },
   },

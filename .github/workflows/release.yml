@@ -23,6 +23,11 @@ jobs:
         curl -L https://github.com/dfinity/vessel/releases/download/v0.7.0/vessel-linux64 -o bin/vessel
         chmod 755 bin/vessel
 
+    - name: Create .env.production
+      run: |
+        echo "PAYMENT_LINK_URL=${{ env.PAYMENT_LINK_URL }}" > .env.production
+        cat .env.production
+
     - name: Build release.tar.gz
       run: |
         set -e
