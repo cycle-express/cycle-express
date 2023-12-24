@@ -1,4 +1,5 @@
 NAME=cycle_express
+VERSION?=$(shell git rev-parse --abbrev-ref HEAD)
 BACKEND_MAIN_SRC=src/backend/Main.mo
 BACKEND_SRC=$(wildcard src/backend/*.mo)
 FRONTEND_SRC=$(wildcard src/frontend/*)
@@ -41,7 +42,9 @@ clean:
 distclean: clean
 	rm -rf node_modules/ .vessel/
 
-release.tar.gz: backend frontend
+release: release-$(VERSION).tar.gz
+
+release-$(VERSION).tar.gz: backend frontend
 	tar zcvf $@ dist/ build/
 
 .PHONY: build frontend backend clean distclean release
