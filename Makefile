@@ -36,7 +36,7 @@ node_modules/:
 	npm i
 
 clean:
-	rm $(DOCS)
+	rm -f $(DOCS)
 	rm -rf build/ dist/
 
 distclean: clean
