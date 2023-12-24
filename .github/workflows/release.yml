@@ -27,9 +27,9 @@ jobs:
 
     - name: Build release.tar.gz
       run: |
-      set -e
-      export PATH=$PWD/bin:$PATH
-      VERSION=$(echo ${{ github.ref }} | cut -d/ -f3) make release
+        set -e
+        export PATH=$PWD/bin:$PATH
+        VERSION=$(echo ${{ github.ref }} | cut -d/ -f3) make release
 
     - name: Upload release
       uses: svenstaro/upload-release-action@v2
