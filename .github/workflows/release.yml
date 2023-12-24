@@ -11,19 +11,17 @@ jobs:
     steps:
     - uses: actions/checkout@v2.3.4
 
-    - name: Install vessel
-      run: |
-        set -e
-        mkdir bin
-        curl -L https://github.com/dfinity/vessel/releases/download/v0.7.0/vessel-linux64 -o bin/vessel
-        chmod 755 bin/vessel
-
     - name: Install pandoc 
       run: |
         set -e
-        mkdir bin
         curl -L https://github.com/jgm/pandoc/releases/download/3.1.11/pandoc-3.1.11-linux-amd64.tar.gz -o pandoc.tar.gz
         tar xvzf pandoc.tar.gz --strip-components 1 -C .
+
+    - name: Install vessel
+      run: |
+        set -e
+        curl -L https://github.com/dfinity/vessel/releases/download/v0.7.0/vessel-linux64 -o bin/vessel
+        chmod 755 bin/vessel
 
     - name: Build release.tar.gz
       run: |
