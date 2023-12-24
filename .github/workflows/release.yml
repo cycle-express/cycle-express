@@ -25,7 +25,7 @@ jobs:
 
     - name: Create .env.production
       run: |
-        echo "PAYMENT_LINK_URL=${{ env.PAYMENT_LINK_URL }}" > .env.production
+        echo "PAYMENT_LINK_URL=${{ vars.PAYMENT_LINK_URL }}" > .env.production
         cat .env.production
 
     - name: Build release.tar.gz
