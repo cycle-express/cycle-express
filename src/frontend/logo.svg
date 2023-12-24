@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="25"
+   height="27.717953"
+   viewBox="0 1 25 24.850578"
+   fill="none"
+   stroke="currentColor"
+   stroke-width="2"
+   stroke-linecap="round"
+   stroke-linejoin="round"
+   class="feather feather-circle child-1"
+   version="1.1"
+   id="svg17305"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs216" />
+  <circle
+     cx="12.500001"
+     cy="13.358977"
+     r="10"
+     id="circle210"
+     style="stroke-width:3;stroke-dasharray:none" />
+  <circle
+     cx="13.358977"
+     cy="-12.500001"
+     r="10"
+     id="circle210-6"
+     style="fill:none;fill-opacity:1;stroke:#fff6d5;stroke-width:2;stroke-linecap:butt;stroke-dasharray:none;stroke-opacity:1"
+     transform="rotate(90)" />
+  <polygon
+     points="12,14 11,22 21,10 12,10 13,2 3,14 "
+     id="polygon202"
+     transform="matrix(-1.3590069,0,0,-1.3590069,28.808083,29.66706)"
+     style="fill:#14854f;fill-opacity:1;stroke-width:0.395831;stroke-dasharray:none" />
+</svg>

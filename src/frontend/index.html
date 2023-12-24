@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      property="og:description"
+      content="Charge up your canisters on the Internet Computer with cycles."
+    />
+    <meta
+      property="twitter:description"
+      content="Charge up your canisters on the Internet Computer with cycles."
+    />
+    <meta property="og:title" content="Cycle.Express: Buy Cycles with Fiat" />
+    <meta
+      property="twitter:title"
+      content="Cycle.Express: Buy Cycles with Fiat"
+    />
+    <meta property="og:type" content="app" />
+    <meta property="og:url" content="https://cycle.express" />
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta
+      property="og:image"
+      content="https://cycle.express/_/raw/cycle-express-preview.png"
+    />
+    <meta
+      property="twitter:image"
+      content="https://cycle.express/_/raw/cycle-express-preview.png"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cycle.Express: Buy Cycles with Fiat</title>
+  </head>
+  <body>
+    <header>
+      <nav>
+        <input id="bmenub" type="checkbox" class="show" />
+        <label for="bmenub" class="burger pseudo button"
+          ><i class="fe fe-bar"></i
+        ></label>
+        <div class="menu">
+          <a href="#" id="button-light" class="pseudo button hidden"
+            ><span class="menu-icon"
+              ><i class="fe fe-sunny-o toggle"></i>&nbsp;<span
+                >Light Mode</span
+              ></span
+            ></a
+          >
+          <a href="#" id="button-dark" class="pseudo button hidden"
+            ><span class="menu-icon"
+              ><i class="fe fe-moon toggle"></i>&nbsp;<span
+                >Dark Mode</span
+              ></span
+            ></a
+          >
+          <a
+            href="https://github.com/cycle-express/cycle-express"
+            target="_blank"
+            class="pseudo button"
+            ><span class="menu-icon"
+              ><i class="fe fe-github"></i>&nbsp;<span>GitHub</span></span
+            ></a
+          >
+          <a href="#about" class="pseudo button"
+            ><span class="menu-icon"
+              ><i class="fe fe-info"></i>&nbsp;<span>About</span></span
+            ></a
+          >
+        </div>
+      </nav>
+      <div class="brand">
+        <h1>
+          <span><img src="logo.svg" /></span><a href="#">Cycle.Express</a>
+        </h1>
+        <div class="rate">
+          1 USD = <span id="exchange-rate">. . .</span> Trillion Cycles
+        </div>
+        <p>
+          Top-up cycle balance with fiat money<br /><em class="text-capitalize"
+            >in 3 easy steps!</em
+          >
+        </p>
+      </div>
+    </header>
+    <main>
+      <div id="div-main">
+        <section>
+          <div class="stepper-wrapper">
+            <div id="stepper-input" class="stepper-item active">
+              <div class="step-counter">1</div>
+              <div class="step-name">Input</div>
+            </div>
+            <div id="stepper-payment" class="stepper-item">
+              <div class="step-counter">2</div>
+              <div class="step-name">Payment</div>
+            </div>
+            <div id="stepper-receipt" class="stepper-item">
+              <div class="step-counter">3</div>
+              <div class="step-name">Receipt</div>
+            </div>
+          </div>
+        </section>
+        <section class="cards">
+          <div id="card-input" class="card">
+            <header>Input the cycle recipient</header>
+            <footer>
+              <label for="receiver" class="small-uppercase">canister id</label>
+              <div class="input-row">
+                <input
+                  type="text"
+                  onfocus="this.select(); return false"
+                  spellcheck="false"
+                  id="input-recipient"
+                />
+                <a
+                  id="button-camera"
+                  class="button camera tooltip-topleft"
+                  data-tooltip="Scan function not yet available"
+                  ><i class="fe fe-camera"></i
+                ></a>
+              </div>
+              <p id="msg-recipient" class="message">&nbsp;</p>
+              <div class="is-center">
+                <button id="button-next" class="half" disabled>Next</button>
+              </div>
+            </footer>
+          </div>
+          <div id="card-payment" class="card hidden">
+            <footer>
+              <p>
+                Click button to pay, or scan the QR code with a mobile device.
+              </p>
+              <div id="qrcode" class="is-center">
+                <img />
+              </div>
+              <div class="flex two">
+                <div class="is-left">
+                  <button id="button-back" class="cool pseudo">Back</button>
+                </div>
+                <div class="is-right">
+                  <button id="button-pay">
+                    <span class="small">Pay</span
+                    ><span class="tiny">(via Stripe)</span>
+                  </button>
+                  <!--label class="below-button is-center">(via Stripe)</label-->
+                </div>
+              </div>
+            </footer>
+
+            <div></div>
+          </div>
+          <div id="card-receipt" class="is-center hidden">
+            <div class="stacker-wrapper">
+              <div id="stacker-payment" class="stacker-item completed">
+                <div class="stack-counter"></div>
+                <div class="stack-content">
+                  Received <span id="paid-total"></span> -
+                  <span id="paid-fee"></span> fee =
+                  <span id="paid-amount"></span> USD
+                </div>
+              </div>
+              <div id="stacker-cycles" class="stacker-item active">
+                <div class="stack-counter">
+                  <span class="spinner"><span></span></span>
+                </div>
+                <div id="stacker-cycles-content" class="stack-content">
+                  Depositing <span id="paid-cycles"></span>T cycles to
+                  <span id="recipient-principal"></span>
+                </div>
+              </div>
+              <div id="stacker-done" class="stacker-item">
+                <div class="stack-counter"></div>
+                <div id="msg-receipt" class="stack-content">We are done!</div>
+              </div>
+            </div>
+          </div>
+          <div class="is-center">
+            <button id="button-again" class="button hidden">Buy Again</button>
+          </div>
+        </section>
+      </div>
+      <div id="div-about"></div>
+      <div id="div-footer" class="is-center">
+        <p>
+          <small
+            >By using this website, you agree to Cycle.Express
+            <a href="#terms">Terms of Use</a> and
+            <a href="#privacy">Privacy Policy</a>.</small
+          >
+        </p>
+      </div>
+    </main>
+    <div id="loadingDiv">
+      <div class="loader"></div>
+    </div>
+  </body>
+</html>

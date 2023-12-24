@@ -1,0 +1,20 @@
+# Various IDEs and Editors
+.vscode/
+.idea/
+**/*~
+
+# Mac OSX temporary files
+.DS_Store
+**/.DS_Store
+
+# frontend code
+node_modules/
+dist/
+.vessel/
+build/
+
+# generated files
+src/assets/*.html
+
+# environment variables
+.env

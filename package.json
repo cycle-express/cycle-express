@@ -1,0 +1,40 @@
+{
+  "name": "cycle-express",
+  "version": "0.1.0",
+  "description": "Buy cycles with fiat",
+  "private": true,
+  "author": "Paul H. Liu <paul@thev.net>",
+  "license": "MIT",
+  "scripts": {
+    "start": "webpack serve --host 0.0.0.0 --mode development --env development",
+    "build": "webpack --mode production"
+  },
+  "devDependencies": {
+    "@dfinity/principal": "^0.15.6",
+    "autoprefixer": "^10.4.16",
+    "cborg": "^4.0.5",
+    "copy-webpack-plugin": "^11.0.0",
+    "css-loader": "^6.8.1",
+    "favicons-webpack-plugin": "^6.0.1",
+    "feathericon": "^1.0.2",
+    "html-loader": "^4.2.0",
+    "html-webpack-plugin": "^5.5.3",
+    "mini-css-extract-plugin": "^2.7.6",
+    "node-sass": "^9.0.0",
+    "picnic": "^7.1.0",
+    "postcss-loader": "^7.3.3",
+    "sass": "^1.69.5",
+    "sass-loader": "^13.3.2",
+    "style-loader": "^3.3.3",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1"
+  },
+  "overrides": {
+    "html-webpack-inline-svg-plugin": {
+      "svgo": "3.1.0",
+      "axios": "1.6.2",
+      "follow-redirects": "1.15.3"
+    }
+  }
+}
