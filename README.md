@@ -21,6 +21,7 @@ The deployment takes 2 steps:
 - Upload frontend assets to the canister. This can be done by using an [upload.js] script.
 
 The deployed canister id is [4r37y-mqaaa-aaaab-aadqq-cai].
+Anyone can verify that the deployed Wasm hash (as well as frontend html and javascript) should match what is [built and released](https://github.com/cycle-express/cycle-express/releases) on github.
 
 Unless otherwise noted, all source codes are released under [MIT License](LICENSE).
 
