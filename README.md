@@ -22,7 +22,7 @@ The deployment takes 2 steps:
 
 The deployed canister id is [4r37y-mqaaa-aaaab-aadqq-cai].
 
-Unless otherwise noted, all source code are released under [MIT License](LICENSE).
+Unless otherwise noted, all source codes are released under [MIT License](LICENSE).
 
 [Motoko]: https://github.com/dfinity/motoko
 [vessel]: https://github.com/dfinity/vessel
