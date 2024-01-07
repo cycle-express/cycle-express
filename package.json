@@ -30,12 +30,5 @@
     "webpack": "^5.89.0",
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^4.15.1"
-  },
-  "overrides": {
-    "html-webpack-inline-svg-plugin": {
-      "svgo": "3.1.0",
-      "axios": "1.6.2",
-      "follow-redirects": "1.15.3"
-    }
   }
 }
