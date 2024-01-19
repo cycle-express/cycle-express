@@ -252,6 +252,22 @@ em {
   left: 10px;
 }
 
+.tooltip-topmiddle:after,
+.tooltip-topmiddle:before {
+  right: -10em;
+  margin-right: 6px;
+  left: auto;
+  top: auto;
+  bottom: calc(100% - 6px);
+  margin-bottom: 12px;
+}
+.tooltip-topmiddle:before {
+  border-color: #555 transparent transparent;
+  margin-bottom: 0;
+  left: 0;
+}
+
+
 button {
   width: 100%;
   color: $color-button;
@@ -452,4 +468,9 @@ code {
   nav .show:checked ~ .burger {
     bottom: calc(-100vh + 3em);
   }
+}
+
+.sale {
+  font-weight: bold;
+  color: var(--picnic-warning);
 }
