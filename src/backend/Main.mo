@@ -312,8 +312,10 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
   func process(i: Nat64) {
     let blob = get_log(i);  
     switch (Util.parseLog(blob)) {
-      case (?(client, amount)) {
-        ignore Queue.pushBack(pending, (client, amount));
+      case (?(client, status, amount)) {
+        if (status == "paid") {
+          ignore Queue.pushBack(pending, (client, amount));
+        }
       };
       case _ {}
     }

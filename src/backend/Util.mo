@@ -62,10 +62,13 @@ module Util {
     "[" # Text.join(",", rows.vals()) # "]"
   };
 
+  public type PaymentStatus = Text;
+
   public type ClientId = {
     canisterId: Principal;
     timestamp: Nat; // Unix timestamp in seconds
     nonce: Text;
+    tag: ?Text; // "ledger", "tipjar", or null
   };
 
   public func parseSessionId(sessionId: Text) : ?(Nat, Text) {
@@ -83,10 +86,12 @@ module Util {
       let iter = Text.split(clientId, #char('_'));
       let canisterId = iter.next() !;
       let sessionId = iter.next() !;
+      let tag = iter.next();
       let (timestamp, nonce) = parseSessionId(sessionId) !;
       { canisterId = Principal.fromText(canisterId);
         timestamp = timestamp;
         nonce = nonce;
+        tag = tag;
       }
     }
   };
@@ -113,6 +118,14 @@ module Util {
     null
   };
 
+  func extractPaymentStatus(json: JSON) : ?PaymentStatus {
+    switch (fieldOf(fieldOf(fieldOf(?json, "data"), "object"), "payment_status")) {
+      case (?(#String(status))) { return ?status };
+      case _ {};
+    };
+    null
+  };
+
   func extractAmount(json: JSON) : ?Nat {
     switch (fieldOf(fieldOf(fieldOf(?json, "data"), "object"), "amount_subtotal")) {
       case (?(#Number(amount))) { return ?Int.abs(amount) };
@@ -122,16 +135,17 @@ module Util {
   };
 
 
-  public func parseLog(log: Blob) : ?(ClientId, Nat) {
+  public func parseLog(log: Blob) : ?(ClientId, PaymentStatus, Nat) {
     do ? {
       let txt = Text.decodeUtf8(log) !;
       let trimmed = Text.trimStart(txt, #predicate(func (c) { c != ' ' }));
       let json_txt = Text.stripStart(trimmed, #text(" checkout: body = ")) !;
       let json = JSON.parse(json_txt) !;
       let client = extractClientId(json) !;
+      let status = extractPaymentStatus(json) !;
       let amount = extractAmount(json) !;
       let clientId = parseClientId(client) !; 
-      (clientId, amount)
+      (clientId, status, amount)
     }
   };
 
