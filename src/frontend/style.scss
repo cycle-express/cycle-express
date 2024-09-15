@@ -75,6 +75,7 @@ body {
 
 nav {
   position: fixed;
+  z-index: 8;
 
   .show:checked ~ .menu {
     padding-top: 2em;
@@ -96,8 +97,6 @@ nav {
       height: 100%;
     }
   }
-
-  z-index: 8;
 }
 
 h1 {
@@ -384,12 +383,12 @@ code {
 #div-footer {
   padding-left: 1em;
   padding-right: 1em;
+  font-size: 90%;
   p {
     margin-top: 0;
     padding-left: 1em;
     padding-right: 1em;
   }
-  font-size: 90%;
 }
 
 #div-footer p {
