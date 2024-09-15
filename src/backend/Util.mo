@@ -19,7 +19,7 @@ import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
 
-import HttpTypes "mo:http-parser.mo/Types";
+import HttpTypes "mo:http-parser/Types";
 import Hex "mo:encoding/Hex";
 import JSON "mo:json/JSON";
 import Hmac "./Hmac";

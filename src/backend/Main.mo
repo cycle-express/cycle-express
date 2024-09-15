@@ -5,15 +5,14 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-import Server "mo:server/lib";
+import Server "mo:server";
 import Assets "mo:assets";
 import T "mo:assets/Types";
-import HttpTypes "mo:http-parser.mo/Types";
+import HttpTypes "mo:http-parser/Types";
 import JSON "mo:json/JSON";
 import Queue "mo:mutable-queue/Queue";
 import Util "./Util";
 
-import Array "mo:base/Array";
 import Buffer "mo:base/Buffer";
 import Cycles "mo:base/ExperimentalCycles";
 import Int "mo:base/Int";
@@ -22,11 +21,8 @@ import Option "mo:base/Option";
 import Principal "mo:base/Principal";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
-import Trie "mo:base/Trie";
 import Region "mo:base/Region";
 import Nat64 "mo:base/Nat64";
-
-import Debug "mo:base/Debug";
 
 shared ({ caller = creator }) actor class CycleExpress(init: {
   prodKey: Text;     // authKey for checkout endpoint
@@ -261,7 +257,7 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
               break LOOP;
             };
             try {
-              Cycles.add(cycles);
+              Cycles.add<system>(cycles);
               await mgmt.deposit_cycles({ canister_id = client.canisterId });
               await log("processed = " # debug_show(client, amount));
               switch (Queue.popFront(shippings)) {
@@ -356,8 +352,8 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
 
   let assets = server.assets;
 
-  func checkout(endpoint: Text): (Request, ResponseClass) -> async Response {
-    func(req : Request, res : ResponseClass) : async Response {
+  func checkout(endpoint: Text): (Request, ResponseClass) -> async* Response {
+    func(req : Request, res : ResponseClass) : async* Response {
       let authKey = if (endpoint == "checkout") init.prodKey else init.testKey;
       let log = logger(endpoint);
       await log("headers = " # Util.headersText(req.headers));
@@ -413,7 +409,7 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
 
   server.get(
     "/status",
-    func(req : Request, res : ResponseClass) : async Response {
+    func(req : Request, res : ResponseClass) : async* Response {
       let (status_code, body) = switch (req.url.queryObj.get("sessionId")) {
         case null (200 : Nat16, Util.statusText(status()));
         case (?sessionId) {
@@ -493,6 +489,20 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
     });
   };
 
+  public shared ({ caller }) func create_chunk(
+    arg : {
+      batch_id : T.BatchId;
+      content : Blob;
+    }
+  ) : async ({
+    chunk_id : T.ChunkId;
+  }) {
+    assets.create_chunk({
+      caller;
+      arg;
+    });
+  };
+
   public shared ({ caller }) func commit_batch(args : T.CommitBatchArguments) : async () {
     assets.commit_batch({
       caller;
@@ -535,13 +545,6 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
     });
   };
 
-  public type StreamingStrategy = {
-    #Callback : {
-      callback : shared query StreamingCallbackToken -> async StreamingCallbackHttpResponse;
-      token : StreamingCallbackToken;
-    };
-  };
-
   public type StreamingCallbackToken = {
     key : Text;
     content_encoding : Text;
@@ -561,7 +564,7 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
     server.http_request(req);
   };
   public func http_request_update(req : HttpRequest) : async HttpResponse {
-    await server.http_request_update(req);
+    await* server.http_request_update(req);
   };
 
   /**

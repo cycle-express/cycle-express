@@ -1,4 +1,4 @@
-let upstream = https://github.com/dfinity/vessel-package-set/releases/download/mo-0.10.2-20231113/package-set.dhall sha256:6ce0f76863d2e6c8872a59bf5480b71281eb0e3af14c2bda7a1f34af556abab2
+let upstream = https://github.com/dfinity/vessel-package-set/releases/download/mo-0.12.1-20240808/package-set.dhall sha256:975d4b33f3ce1fa051c73e45fab69dd187dba6b037b6d2e5568ccac26c477d4f
 
 let Package =
     { name : Text, version : Text, repo : Text, dependencies : List Text }
@@ -9,23 +9,28 @@ let
     [
       { name = "server"
       , repo = "https://github.com/krpeacock/server"
-      , version = "c5307304623879ef88c25ff3f334e4523ffc88d3"
-      , dependencies = [ "base", "certified-cache", "json", "array", "encoding", "motoko-sha", "serde", "test", "assets", "http-parser.mo" ]
+      , version = "011677de33a188fa981d6eac42e09dbe65dabd00"
+      , dependencies = [ "base", "certified-cache", "serde", "test", "assets", "http-parser" ]
       },
       { name = "certified-cache"
       , repo = "https://github.com/krpeacock/certified-cache"
-      , version = "8657652c4062ef0e91ebe269843ccef1bb4796ae"
-      , dependencies = [ "base", "ic-certification", "motoko-sha", "StableHashMap" ]
+      , version = "96ef8a3f05669641506fb90faf01ac55dde9721d"
+      , dependencies = [ "base", "ic-certification", "sha2", "StableHashMap" ]
       },
       { name = "assets"
       , repo = "https://github.com/krpeacock/assets"
-      , version = "4a0b09bd495a21a2b35a6077e88aec6ab3b680c8"
+      , version = "b3b5788a136695cea1b3877f5356f3b8bc205d14"
       , dependencies = [ "base", "test" ]
       },
-      { name = "http-parser.mo"
+      { name = "http-parser"
       , repo = "https://github.com/NatLabs/http-parser.mo"
-      , version = "27cba8ed0d39387e0fb660f65909ffe2a7d54413"
-      , dependencies = [ "base", "json", "array", "encoding", "parser-combinators" ]
+      , version = "0387c36851547731d69a4e2839916bbf16bc56b8"
+      , dependencies = [ "base", "json", "encoding", "format" ]
+      },
+      { name = "format"
+      , repo = "https://github.com/tomijaga/format.mo"
+      , version = "e96cb389d44f923164e940b0bd35c8a459f128f1"
+      , dependencies = [ "base" ]
       },
       { name = "ic-certification"
       , repo = "https://github.com/nomeata/ic-certification"
