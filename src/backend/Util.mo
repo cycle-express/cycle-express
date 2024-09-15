@@ -22,6 +22,8 @@ import Time "mo:base/Time";
 import HttpTypes "mo:http-parser/Types";
 import Hex "mo:encoding/Hex";
 import JSON "mo:json/JSON";
+
+import Account "./Account";
 import Hmac "./Hmac";
 
 module Util {
@@ -68,7 +70,7 @@ module Util {
     canisterId: Principal;
     timestamp: Nat; // Unix timestamp in seconds
     nonce: Text;
-    tag: ?Text; // "ledger", "tipjar", or null
+    subaccount : ?Blob;
   };
 
   public func parseSessionId(sessionId: Text) : ?(Nat, Text) {
@@ -84,14 +86,26 @@ module Util {
   public func parseClientId(clientId: Text) : ?ClientId  {
     do ? {
       let iter = Text.split(clientId, #char('_'));
-      let canisterId = iter.next() !;
+      let _accountId = iter.next() !;
       let sessionId = iter.next() !;
-      let tag = iter.next();
+      let accountId = Text.replace(_accountId, #text "--", ".");
+      let account = Result.toOption(Account.fromText(accountId)) !;
+      // Keep subaccount if it is available. If it is not available,
+      // set it to 32-zero blob if the owner principal is not opaque.
+      let subaccount = Option.getMapped<Blob, ?Blob>(
+          account.subaccount,
+          func x = ?x,
+          if (not(isPrincipalOpaque(account.owner))) {
+            ?(Blob.fromArray(Array.tabulate<Nat8>(32, func _ = 0)))
+          } else {
+            null
+          }
+      );
       let (timestamp, nonce) = parseSessionId(sessionId) !;
-      { canisterId = Principal.fromText(canisterId);
-        timestamp = timestamp;
-        nonce = nonce;
-        tag = tag;
+      { canisterId = account.owner;
+        timestamp;
+        nonce;
+        subaccount;
       }
     }
   };
@@ -207,5 +221,11 @@ module Util {
     };
     if (cycles <= 0 or costs <= 0) null
     else ?Int.abs(cycles / costs * 100)
+  };
+
+  // Opaque means it is likely canister id
+  func isPrincipalOpaque(principal: Principal) : Bool {
+    let arr = Blob.toArray(Principal.toBlob(principal));
+    return arr[arr.size() - 1] == 1;
   };
 }

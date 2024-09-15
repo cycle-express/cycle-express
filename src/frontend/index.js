@@ -9,8 +9,15 @@ import "./style.scss";
 import qrcode from "./qrcode.js";
 import { encode, decode } from "cborg";
 import { Principal } from "@dfinity/principal";
+import { encodeIcrcAccount, decodeIcrcAccount } from "@dfinity/ledger-icrc";
 
 const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+function isPrincipalOpaque(principal) {
+  const bytes = principal.toUint8Array();
+  // 1 means Opaque id class (CanisterId)
+  return bytes[bytes.length - 1] == 1;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // We use a session id to track each payment. A new id is created whenever
@@ -19,17 +26,17 @@ const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 // A session id is a string of the format: <timestamp>-<8 digit nonce>
 var sessionId = null;
 
-function newPaymentLink() {
+function newPaymentLink(recipient) {
   let now = Math.floor(Date.now() / 1000);
   sessionId = now + "-" + Math.random().toString().substr(2, 8);
-  return existingPaymentLink();
+  return existingPaymentLink(recipient);
 }
 
-function existingPaymentLink() {
+function existingPaymentLink(recipient) {
   if (!sessionId) {
     throw "NoExistingPaymentLink";
   }
-  let recipient = input_recipient.value.trim();
+  recipient = recipient.replace(".", "--");
   return `${process.env.PAYMENT_LINK_URL}?client_reference_id=${recipient}_${sessionId}`;
 }
 
@@ -80,7 +87,7 @@ function resize2fit(input) {
   let new_max_input_length =
     Math.floor(
       (textLength * clientWidth * font_size) /
-        (scrollWidth * default_input_font_size)
+        (scrollWidth * default_input_font_size),
     ) - 1;
   // console.log( clientWidth, scrollWidth, max_input_length, new_max_input_length, textLength);
   if (scrollWidth > clientWidth || font_size < default_input_font_size) {
@@ -104,38 +111,41 @@ async function validateRecipient(recipient_id) {
   if (recipient_id == "") {
     throw "Empty";
   }
-  let principal;
+  let account;
   try {
-    principal = Principal.fromText(recipient_id);
+    account = decodeIcrcAccount(recipient_id);
   } catch (err) {
     throw "Malformed";
   }
-  if (principal.isAnonymous()) {
+  if (account.owner.isAnonymous()) {
     throw "Anonymous";
   }
   let url = `${API_HOST}/api/v2/canister/${recipient_id}/read_state`;
-  let req = {
-    content: {
-      sender: new Uint8Array([4]), // anonymous
-      ingress_expiry: BigInt(new Date().getTime() + 4 * 60000) * 1000000n,
-      request_type: "read_state",
-      paths: [],
-    },
-  };
-  try {
-    let res = await fetch(url, {
-      method: "POST",
-      body: encode(req),
-      headers: { "Content-type": "application/cbor" },
-    });
-    if (res.ok) {
-      return;
+  if (!account.subaccount) {
+    let req = {
+      content: {
+        sender: new Uint8Array([4]), // anonymous
+        ingress_expiry: BigInt(new Date().getTime() + 4 * 60000) * 1000000n,
+        request_type: "read_state",
+        paths: [],
+      },
+    };
+    try {
+      let res = await fetch(url, {
+        method: "POST",
+        body: encode(req),
+        headers: { "Content-type": "application/cbor" },
+      });
+      if (res.ok) {
+        return;
+      }
+    } catch (err) {
+      console.log(err);
+      throw "Error";
     }
-  } catch (err) {
-    console.log(err);
-    throw "Error";
+    throw "NotFound";
   }
-  throw "NotFound";
+  return account;
 }
 
 var recipientNeedsValidation = true;
@@ -143,27 +153,53 @@ var recipientNeedsValidation = true;
 function setupCheckRecipient() {
   let timeout = null;
   let check = async () => {
+    let recipientIsCanister = false;
     // Skip the check if inputbox is hidden
     if (input_recipient.getClientRects().length === 0) return;
-    let msg;
+    let msg = "&nbsp;";
     let recipient_id = input_recipient.value.trim();
+    let account = null;
+    recipientNeedsValidation = true;
     try {
       msg_recipient.innerHTML = "Checking...";
-      await validateRecipient(recipient_id);
+      account = await validateRecipient(recipient_id);
+      if (recipient_id != input_recipient.value.trim()) {
+        return;
+      }
       recipientNeedsValidation = false;
-      msg = "<s>Canister found. Please proceed.</s>";
-      button_next.disabled = !cyclesPerUsd || recipientNeedsValidation;
+      recipientIsCanister = true;
     } catch (err) {
       button_next.disabled = true;
       if (err == "Empty") {
         msg = "&nbsp;";
       } else if (err == "Malformed" || err == "Anonymous") {
-        msg = "<i>Please input a valid canister id.</i>";
+        msg = "<i>Please input a valid canister or account id.</i>";
       } else if (err == "NotFound") {
-        msg = "<b>Canister not found. Please try a different one.</b>";
+        recipientIsCanister = false;
+        recipientNeedsValidation = false;
       } else {
+        console.log(err);
         msg = "<b>Internal error. Please contact support.</b>";
       }
+    }
+    if (!recipientNeedsValidation) {
+      button_next.disabled =
+        typeof cyclesPerUsd != "bigint" || recipientNeedsValidation;
+      if (recipientIsCanister) {
+        if (account && "subaccount" in account) {
+          msg = "<s>Canister found. Buying TCycles for subaccount?</s>";
+          canister_id.innerText = "ICRC Account";
+        } else {
+          msg = "<s>Canister found. Topping up cycle balance?</s>";
+          canister_id.innerText = "canister id";
+        }
+      } else {
+        msg = "<s>ICRC account identified. Buying TCycles?</s>";
+        canister_id.innerText = "ICRC Account";
+      }
+    }
+    if (typeof cyclesPerUsd == "string") {
+      msg = cyclesPerUsd;
     }
     msg_recipient.innerHTML = msg;
   };
@@ -186,13 +222,16 @@ let card_input, card_payment, card_receipt;
 let stepper_input, stepper_payment, stepper_receipt;
 let stacker_payment, stacker_cycles, stacker_done;
 let paid_amount, paid_total, paid_fee, paid_cycles;
-let recipient_principal, msg_receipt, exchange_rate;
+let recipient_account, msg_receipt, exchange_rate;
+let payment_topup, payment_recipient, payment_instruction;
+let payment_recipient_error, payment_instruction_error;
+let canister_id;
 
-function showQR() {
+function showQR(recipient) {
   let typeNumber = 0;
   let errorCorrectionLevel = "L";
   let qr = qrcode(typeNumber, errorCorrectionLevel);
-  let url = newPaymentLink();
+  let url = newPaymentLink(recipient);
   qr.addData(url);
   qr.make(1);
   div_qrcode.innerHTML = qr.createSvgTag({
@@ -202,25 +241,28 @@ function showQR() {
   });
 }
 
-var cyclesPerUsd = null;
+var cyclesPerUsd = "Fetching cycle price...";
 async function fetchExchangeRate() {
+  let tx = null;
   try {
     let res = await fetch("/status", {
       method: "GET",
     });
-    if (res.ok) {
-      let tx = await res.json();
-      console.log("status = ", tx);
+    if ("ok" in res && res.ok) {
+      tx = await res.json();
       if (tx.normal && tx.normal.cyclesPerUsd) {
         cyclesPerUsd = BigInt(tx.normal.cyclesPerUsd);
         exchange_rate.innerHTML =
           "" + Number(cyclesPerUsd / 1000000000n) / 1000;
-        button_next.disabled = !cyclesPerUsd || recipientNeedsValidation;
       }
     }
   } catch (err) {
     console.log(err);
   }
+  if (!tx) {
+    cyclesPerUsd = "<b>Error fetching cycle price. Pelase try again later.</b>";
+  }
+  input_recipient.oninput();
 }
 
 // Open a window for the Strip payment link.
@@ -245,7 +287,7 @@ async function pollSession() {
     });
     if (res.ok) {
       let tx = await res.json();
-      console.log("status = ", tx);
+      // console.log("status = ", tx);
       if (paymentWindow) {
         paymentWindow.close();
         paymentWindow = null;
@@ -253,7 +295,7 @@ async function pollSession() {
       if (sessionStatus == null) {
         sessionStatus = tx.status;
         history.replaceState({}, "", "#receipt");
-        gotoReceipt(tx.principal, tx.amount, tx.fee, tx.cycles);
+        gotoReceipt(tx.account, tx.amount, tx.fee, tx.cycles);
       }
       if (tx.status == "pending") {
         setReceiptPending();
@@ -271,10 +313,10 @@ async function pollSession() {
   }
 }
 
-function openPaymentWindow() {
-  paymentWindow = window.open(existingPaymentLink(), "_blank");
+const openPaymentWindow = (recipient) => () => {
+  paymentWindow = window.open(existingPaymentLink(recipient), "_blank");
   paymentWindow.focus();
-}
+};
 
 function gotoInput() {
   stepper_input.classList.add("active");
@@ -292,7 +334,7 @@ function gotoInput() {
   }
 }
 
-function gotoPayment() {
+function gotoPayment(to) {
   stepper_input.classList.remove("active");
   stepper_payment.classList.add("active");
   stepper_receipt.classList.remove("active");
@@ -303,12 +345,56 @@ function gotoPayment() {
   card_payment.classList.remove("hidden");
   card_receipt.classList.add("hidden");
   button_again.classList.add("hidden");
-  showQR();
-  pollIntervalId = setInterval(pollSession, 4000);
-  sessionStatus = null;
+  let recipient = to ? to : input_recipient.value.trim();
+  payment_recipient.innerText = recipient;
+  let account = null;
+  try {
+    account = decodeIcrcAccount(recipient);
+  } catch (err) {
+    console.log(err);
+  }
+  if (!account) {
+    console.log("Failed to decode account!");
+    payment_recipient.classList.add("error");
+    payment_topup.classList.add("hidden");
+    payment_recipient_error.classList.remove("hidden");
+    payment_instruction.classList.add("hidden");
+    payment_instruction_error.classList.remove("hidden");
+    button_pay.classList.add("hidden");
+  } else {
+    console.log("Pay to account", account);
+    if (isPrincipalOpaque(account.owner) && !("subaccount" in account)) {
+      payment_topup.innerText = "To topup cycles for canister:";
+    } else {
+      payment_topup.innerText = "To buy TCycles for account:";
+    }
+    payment_topup.classList.remove("hidden");
+    payment_recipient_error.classList.add("hidden");
+    payment_instruction.classList.remove("hidden");
+    payment_instruction_error.classList.add("hidden");
+    button_pay.classList.remove("hidden");
+    payment_recipient.classList.remove("error");
+    // payto would be canonical
+    let payto = encodeIcrcAccount(account);
+    payment_recipient.innerText = payto;
+    showQR(payto);
+    pollIntervalId = setInterval(pollSession, 4000);
+    sessionStatus = null;
+    button_pay.onclick = openPaymentWindow(payto);
+  }
 }
 
-function gotoReceipt(principal, amount, fee, cycles) {
+function gotoReceipt(account_id, amount, fee, cycles) {
+  let account = null;
+  let unit = "T cycles";
+  try {
+    account = decodeIcrcAccount(account_id);
+    if ("subaccount" in account || !isPrincipalOpaque(account.owner)) {
+      unit = " TCycles";
+    }
+  } catch (err) {
+    console.log(err);
+  }
   stepper_input.classList.remove("active");
   stepper_payment.classList.remove("active");
   stepper_receipt.classList.add("active");
@@ -321,8 +407,9 @@ function gotoReceipt(principal, amount, fee, cycles) {
   paid_amount.innerText = "" + Number(amount) / 100;
   paid_total.innerText = "" + (Number(amount) + Number(fee)) / 100;
   paid_fee.innerText = "" + Number(fee) / 100;
-  paid_cycles.innerText = "" + Number(BigInt(cycles) / 1000000000n) / 1000;
-  recipient_principal.innerText = principal;
+  paid_cycles.innerText =
+    "" + Number(BigInt(cycles) / 1000000000n) / 1000 + unit;
+  recipient_account.innerText = account_id;
   msg_receipt.innerHTML = "We are done!";
   button_again.classList.add("hidden");
 }
@@ -379,14 +466,21 @@ function gotoCompleted() {
 // This is only triggered with browser back & forward button, but not
 // history.pushState or history.replaceState.
 async function route() {
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+  const to = urlParams.get("to");
   let hash = window.location.hash;
-  console.log("window.location.hash", hash);
+  // console.log("window.location.hash", hash);
   if (hash == "" || hash == null || hash == "#" || hash == "#input") {
     div_main.hidden = false;
     div_about.hidden = true;
-    gotoInput();
+    if (to) {
+      gotoPayment(to);
+    } else {
+      gotoInput();
+    }
   } else if (hash == "#payment") {
-    if (!cyclesPerUsd || recipientNeedsValidation) {
+    if (typeof cyclesPerUsd != "bigint" || recipientNeedsValidation) {
       window.location.hash = "";
       history.replaceState({}, "", "");
     } else {
@@ -448,24 +542,41 @@ function main() {
   paid_total = document.getElementById("paid-total");
   paid_fee = document.getElementById("paid-fee");
   paid_cycles = document.getElementById("paid-cycles");
-  recipient_principal = document.getElementById("recipient-principal");
+  recipient_account = document.getElementById("recipient-account");
   msg_receipt = document.getElementById("msg-receipt");
   exchange_rate = document.getElementById("exchange-rate");
+  payment_topup = document.getElementById("payment-topup");
+  payment_recipient = document.getElementById("payment-recipient");
+  payment_instruction = document.getElementById("payment-instruction");
+  payment_recipient_error = document.getElementById("payment-recipient-error");
+  payment_instruction_error = document.getElementById(
+    "payment-instruction-error",
+  );
+  canister_id = document.getElementById("canister-id");
 
   input_recipient.oninput = setupCheckRecipient();
   input_recipient.oninput();
-  button_back.onclick = () => {
-    history.go(-1);
+
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+  if (urlParams.get("to")) {
+    button_back.innerText = "Cancel";
+    button_again.innerText = "Done";
+  }
+  let back_or_close = () => {
+    if (urlParams.get("to")) {
+      window.close();
+    } else {
+      history.go(-1);
+    }
   };
+  button_back.onclick = back_or_close;
+  button_again.onclick = back_or_close;
   button_next.onclick = () => {
     history.pushState({}, "", "#payment");
     gotoPayment();
   };
   button_next.disabled = true;
-  button_pay.onclick = openPaymentWindow;
-  button_again.onclick = () => {
-    history.go(-1);
-  };
 
   // Initial setting
   toggleDarkMode(localStorage.getItem("dark-mode") == "true");
@@ -486,7 +597,7 @@ function main() {
 
   fetchExchangeRate();
   // gotoPayment();
-  // gotoReceipt("4r37y-mqaaa-aaaab-aadqq-cai", "70", "30", "750000000000");
+  // gotoReceipt("k54e2-ciaaa-aaaab-aaaka-cai", "70", "30", "750000000000");
   // setReceiptDone();
   window.addEventListener("hashchange", route);
   route();

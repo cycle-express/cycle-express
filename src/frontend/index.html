@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="utf-8" />
@@ -106,9 +106,13 @@
         </section>
         <section class="cards">
           <div id="card-input" class="card">
-            <header>Input the cycle recipient</header>
+            <header>
+              Please input a recipient.
+            </header>
             <footer>
-              <label for="receiver" class="small-uppercase">canister id</label>
+              <label id="canister-id" for="receiver" class="small-uppercase"
+                >canister id</label
+              >
               <div class="input-row">
                 <input
                   type="text"
@@ -125,14 +129,24 @@
               </div>
               <p id="msg-recipient" class="message">&nbsp;</p>
               <div class="is-center">
-                <button id="button-next" class="half" disabled>Next</button>
+                <button id="button-next" class="half" disabled>Proceed</button>
               </div>
             </footer>
           </div>
           <div id="card-payment" class="card hidden">
             <footer>
-              <p>
-                Click button to pay, or scan the QR code with a mobile device.
+              <p id="payment-topup">To topup cycles for canister:</p>
+              <p id="payment-recipient-error" class="hidden">
+                Invalid recipient account:
+              </p>
+              <code>
+                <pre id="payment-recipient"></pre>
+              </code>
+              <p id="payment-instruction">
+                Click Pay or scan the QR code below.
+              </p>
+              <p id="payment-instruction-error" class="hidden">
+                Please go back and enter a correct value.
               </p>
               <div id="qrcode" class="is-center">
                 <img />
@@ -150,7 +164,6 @@
                 </div>
               </div>
             </footer>
-
             <div></div>
           </div>
           <div id="card-receipt" class="is-center hidden">
@@ -168,8 +181,10 @@
                   <span class="spinner"><span></span></span>
                 </div>
                 <div id="stacker-cycles-content" class="stack-content">
-                  Depositing <span id="paid-cycles"></span>T cycles to
-                  <span id="recipient-principal"></span>
+                  <div>
+                    Depositing <span id="paid-cycles"></span> to<br>
+                    <span id="recipient-account"></span>
+                  </div>
                 </div>
               </div>
               <div id="stacker-done" class="stacker-item">

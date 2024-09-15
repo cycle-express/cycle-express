@@ -26,6 +26,15 @@ $(MOC): .vessel/
 .vessel/: vessel.dhall package-set.dhall
 	vessel install && sed -i 's/base-0.7.3/base/g' $$(find .vessel -type f)
 
+src/backend/CyclesLedger.mo: cycles-ledger.did
+	didc bind -t mo $< | sed -e 's/Self.*actor/Self = actor/' > $@
+
+cycles-ledger.did:
+	curl -sLo $@ https://github.com/dfinity/cycles-ledger/releases/download/cycles-ledger-v1.0.0/cycles-ledger.did
+
+src/backend/Account.mo:
+	curl -sLo $@ https://github.com/dfinity/ICRC-1/raw/refs/heads/main/ref/Account.mo
+
 src/assets/%.html: doc/%.md
 	pandoc -f markdown -t html --shift-heading-level-by=2 $< > $@
 
