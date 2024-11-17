@@ -91,13 +91,19 @@ module.exports = (env) => ({
     liveReload: true,
     server: "https",
     watchFiles: [path.resolve(__dirname, "src", "frontend")],
-    proxy: {
-      "/status": {
+    proxy: [
+      {
+        context: ["/status"],
         target: "https://cycle.express",
         secure: false,
         changeOrigin: true,
       },
-      "/api": { target: "https://icp0.io", secure: false, changeOrigin: true },
-    },
+      {
+        context: ["/api"],
+        target: "https://icp0.io",
+        secure: false,
+        changeOrigin: true,
+      },
+    ],
   },
 });
