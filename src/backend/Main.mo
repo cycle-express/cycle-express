@@ -272,7 +272,7 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
                 case null {
                   Cycles.add<system>(cycles);
                   await mgmt.deposit_cycles({ canister_id = client.canisterId });
-                  await log("processed = " # debug_show(client, amount));
+                  await log("processed = " # debug_show(client, amount, cycles));
                 };
               };
               switch (Queue.popFront(shippings)) {
