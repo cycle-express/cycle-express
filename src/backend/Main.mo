@@ -254,7 +254,7 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
             let amount = Nat.sub(paid_amount, FEE_USD);
             let cycles = amount * currentPrice() / 100;
             if (cycles + MIN_CYCLE_RESERVE > Cycles.balance()) {
-              let item = (client, amount, "InsufficientCycles");
+              let item = (client, paid_amount, "InsufficientCycles");
               await log("failed = " # debug_show(item));
               ignore Queue.pushBack(failed, item);
               break LOOP;
@@ -286,7 +286,7 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
                 ignore Queue.popFront(processed);
               }
             } catch (err) {
-              let item = (client, amount, Util.showError(err));
+              let item = (client, paid_amount, Util.showError(err));
               await log("failed = " # debug_show(item));
               ignore Queue.pushBack(failed, item);
               break LOOP;
