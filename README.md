@@ -18,7 +18,7 @@ Just type `make` to build both frontend and backend from source.
 
 The deployment takes 2 steps:
 - Deploy canister code with the required initialization parameters. This can be done from [ic-repl].
-- Upload frontend assets to the canister. This can be done by using an [upload.js] script.
+- Upload frontend assets to the canister. This can be done by using the [icx-asset] command.
 
 The deployed canister id is [4r37y-mqaaa-aaaab-aadqq-cai].
 Anyone can verify that the deployed Wasm hash (as well as frontend html and javascript) should match what is [built and released](https://github.com/cycle-express/cycle-express/releases) on github.
@@ -33,5 +33,5 @@ Unless otherwise noted, all source codes are released under [MIT License](LICENS
 [nodejs]: https://nodejs.org
 [pandoc]: https://pandoc.org
 [Stripe]: https://stripe.com
-[upload.js]: https://github.com/krpeacock/server/blob/main/examples/http_greet/src/http_greet/upload.js
+[icx-asset]: https://github.com/dfinity/sdk/tree/main/src/canisters/frontend/icx-asset
 [ic-repl]: https://github.com/dfinity/ic-repl

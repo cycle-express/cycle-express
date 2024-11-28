@@ -12,13 +12,12 @@ It means developing decentralized Web3 Apps no longer requires any cryptocurrenc
 You pay at the current price of cycles per US dollar shown at the top of this website.
 Just tell us the canister id of your Web3 App (called Satellite ID in [Juno]), we'll top it up by the amount you have paid for.
 
-## Why can you offer cycles at such a big discount?
+## What decides the cycle price per USD?
 
 The price of a trillion cycles is pegged at the price of 1 [SDR], according to the [Internet Computer Protocol].
-For example, 1 USD is about 0.74 SDR at the time of writing, which would translate to 0.74 trillion cycles.
-However, we were able to secure a large amount of cycles at a lower market price, so you can get a lot more cycles per USD!
+For example, 1 USD is about 0.75 SDR at the time of writing, which would translate to 0.75 trillion cycles.
 
-Our displayed price will be adjusted each time we bulk buy from the market, so grab them cheaply while stocks last!
+Sometimes we were able to source cheaper cycles from the market, in which case some of the discount will be passed on to our users.
 
 ## How do I choose a different amount than the default $1.30? 
 
