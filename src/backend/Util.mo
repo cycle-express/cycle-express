@@ -226,6 +226,8 @@ module Util {
   // Opaque means it is likely canister id
   func isPrincipalOpaque(principal: Principal) : Bool {
     let arr = Blob.toArray(Principal.toBlob(principal));
-    return arr[arr.size() - 1] == 1;
+    let len = arr.size();
+    // len == 0 is the case for aaaaa-aa, which is treated as opaque.
+    (len == 0) or (arr[len - 1] == 1)
   };
 }

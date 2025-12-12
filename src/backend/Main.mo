@@ -342,7 +342,13 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
     ignore pump();
   };
 
-  public func processLogs() {
+  // Helper function only for admin.
+  public shared ({ caller }) func processLogs() {
+    assert(caller == creator);
+    processNextLogs();
+  };
+
+  public func processNextLogs() {
     var i = processedCount;
     while (i < logCount()) {
       process(i);
@@ -405,7 +411,7 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
                   (400: Nat16, "Invalid signature") 
                 } else {
                   await log("body = " # JSON.show(json));
-                  if (authKey == init.prodKey) { processLogs() };
+                  if (authKey == init.prodKey) { processNextLogs() };
                   (200: Nat16, "")
                 }
               }
