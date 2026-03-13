@@ -427,8 +427,10 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
     }
   };
 
+  server.get("/checkout", checkout("checkout"));
   server.post("/checkout", checkout("checkout"));
 
+  server.get("/test-checkout", checkout("test-checkout"));
   server.post("/test-checkout", checkout("test-checkout"));
 
   server.get(
