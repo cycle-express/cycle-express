@@ -22,7 +22,6 @@
     "html-loader": "^5.1.0",
     "html-webpack-plugin": "^5.6.3",
     "mini-css-extract-plugin": "^2.9.2",
-    "node-sass": "^9.0.0",
     "picnic": "^7.1.0",
     "postcss-loader": "^8.1.1",
     "sass": "^1.81.0",
