@@ -36,7 +36,10 @@ module {
   };
   public type ChangeIndexId = { #SetTo : Principal; #Unset };
   public type CmcCreateCanisterArgs = {
+    /// Optional instructions to select on which subnet the new canister will be created on.
     subnet_selection : ?SubnetSelection;
+    /// Optional canister settings that, if set, are applied to the newly created canister.
+    /// If not specified, the caller is the controller of the canister and the other settings are set to default values.
     settings : ?CanisterSettings;
   };
   public type CreateCanisterArgs = {
@@ -48,7 +51,11 @@ module {
   public type CreateCanisterError = {
     #GenericError : { message : Text; error_code : Nat };
     #TemporarilyUnavailable;
-    #Duplicate : { duplicate_of : Nat; canister_id : ?Principal };
+    #Duplicate : {
+      duplicate_of : Nat;
+      /// If the original transaction created a canister then this field will contain the canister id.
+      canister_id : ?Principal;
+    };
     #CreatedInFuture : { ledger_time : Nat64 };
     #FailedToCreate : {
       error : Text;
@@ -76,7 +83,11 @@ module {
     #GenericError : { message : Text; error_code : Nat };
     #TemporarilyUnavailable;
     #InsufficientAllowance : { allowance : Nat };
-    #Duplicate : { duplicate_of : Nat; canister_id : ?Principal };
+    #Duplicate : {
+      duplicate_of : Nat;
+      /// If the original transaction created a canister then this field will contain the canister id.
+      canister_id : ?Principal;
+    };
     #CreatedInFuture : { ledger_time : Nat64 };
     #TooOld;
     #InsufficientFunds : { balance : Nat };
@@ -85,17 +96,39 @@ module {
     block_id : BlockIndex;
     canister_id : Principal;
   };
-  public type DataCertificate = { certificate : Blob; hash_tree : Blob };
+  public type DataCertificate = {
+    /// See https://internetcomputer.org/docs/current/references/ic-interface-spec#certification
+    certificate : Blob;
+    /// CBOR encoded hash_tree
+    hash_tree : Blob;
+  };
   public type DepositArgs = { to : Account; memo : ?Blob };
   public type DepositResult = { balance : Nat; block_index : BlockIndex };
-  public type GetArchivesArgs = { from : ?Principal };
+  public type GetArchivesArgs = {
+    /// The last archive seen by the client.
+    /// The ledger will return archives coming
+    /// after this one if set, otherwise it
+    /// will return the first archives.
+    from : ?Principal;
+  };
   public type GetArchivesResult = [
-    { end : Nat; canister_id : Principal; start : Nat }
+    {
+      /// The last block in the archive
+      end : Nat;
+      /// The id of the archive
+      canister_id : Principal;
+      /// The first block in the archive
+      start : Nat;
+    }
   ];
   public type GetBlocksArgs = [{ start : Nat; length : Nat }];
   public type GetBlocksResult = {
+    /// Total number of blocks in the
+    /// block log.
     log_length : Nat;
     blocks : [{ id : Nat; block : Value }];
+    /// The archived_blocks vector is always going to be empty
+    /// for this ledger because there is no archive node.
     archived_blocks : [
       {
         args : GetBlocksArgs;
@@ -136,7 +169,9 @@ module {
   };
   public type SubnetFilter = { subnet_type : ?Text };
   public type SubnetSelection = {
+    /// Choose a random subnet that satisfies the specified properties.
     #Filter : SubnetFilter;
+    /// / Choose a specific subnet
     #Subnet : { subnet : Principal };
   };
   public type SupportedBlockType = { url : Text; block_type : Text };

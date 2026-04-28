@@ -9,7 +9,7 @@ let
     [
       { name = "server"
       , repo = "https://github.com/krpeacock/server"
-      , version = "011677de33a188fa981d6eac42e09dbe65dabd00"
+      , version = "fe4052f94da5224575d6e804b20f95f908532b11"
       , dependencies = [ "base", "certified-cache", "serde", "test", "assets", "http-parser" ]
       },
       { name = "certified-cache"

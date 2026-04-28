@@ -90,7 +90,7 @@ module {
     let principalText = Text.fromIter(iterSlice(chars, 0, lastDash - 1 : Nat));
     let owner = Principal.fromText(principalText);
 
-    var subaccountMut = Array.init<Nat8>(32, 0);
+    let subaccountMut = Array.init<Nat8>(32, 0);
 
     let subaccountDigits = iterChain(
       iterReplicate('0', 64 - numSubaccountDigits : Nat),

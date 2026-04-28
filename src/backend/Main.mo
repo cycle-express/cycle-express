@@ -27,7 +27,7 @@ import Time "mo:base/Time";
 import Region "mo:base/Region";
 import Nat64 "mo:base/Nat64";
 
-shared ({ caller = creator }) actor class CycleExpress(init: {
+shared ({ caller = creator }) persistent actor class CycleExpress(init: {
   prodKey: Text;     // authKey for checkout endpoint
   testKey: Text;     // authKey for checkout testing
   margin: Nat;       // profit margin, percentage radix 2
@@ -42,7 +42,7 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
   public type Index = Nat64;
 
   // Internal representation uses two regions, working together.
-  stable var logState = {
+  let logState = {
     bytes = Region.new();
     var bytesCount : Nat64 = 0;
     elems = Region.new ();
@@ -64,7 +64,7 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
     size : Nat64;
   };
 
-  let elem_size = 16 : Nat64; /* two Nat64s, for pos and size. */
+  transient let elem_size = 16 : Nat64; /* two Nat64s, for pos and size. */
 
   func logCount() : Nat64 {
       logState.elemsCount
@@ -133,13 +133,13 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
 
   // Track deposited cycles and their purchase price. 
   // Must call deposit() method to add new deposits.
-  stable var deposits = Queue.empty<(Cycle, Usd)>();
+  let deposits = Queue.empty<(Cycle, Usd)>();
 
   // Track shippings (Cycle) and income (Usd).
   // A new zero entry is pushed to front for each new deposit. 
   // The top entry is always updated whenever there is a 
   // successful transaction.
-  stable var shippings = Queue.empty<(Cycle, Usd)>();
+  let shippings = Queue.empty<(Cycle, Usd)>();
 
   // Cycles per Usd
   func currentPrice() : Cycle {
@@ -149,7 +149,7 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
       init.defaultPrice);
   };
 
-  stable var serviceStatus : Status = #Normal({ cyclesPerUsd = currentPrice() });
+  let serviceStatus : Status = #Normal({ cyclesPerUsd = currentPrice() });
 
   func status() : Status {
     switch (serviceStatus) {
@@ -173,7 +173,7 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
     shippings: [(Cycle, Usd)];
   };
 
-  public shared ({ caller }) func deposit(cycles: Cycle, icp: Icp, usdPerIcp: Usd) {
+  public shared ({ caller }) func deposit(cycles: Cycle, icp: Icp, usdPerIcp: Usd) : async () {
     assert(caller == creator);
     ignore Queue.pushFront((cycles, icp * usdPerIcp / 100_000_000), deposits);
     ignore Queue.pushFront((0, 0), shippings);
@@ -201,27 +201,27 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
  *********************************************************/
   type Management = actor { deposit_cycles : ({canister_id: Principal}) -> async (); };
  
-  let MAX_QUEUE_SIZE : Int = 333;
-  let MIN_CYCLE_RESERVE = 100_000_000_000_000; // 100T cycle reserve
-  let FEE_USD = 30; // Stripe flat fee
-  stable var pending = Queue.empty<(ClientId, Nat)>();
-  stable var failed = Queue.empty<(ClientId, Nat, Text)>();
-  stable var processed = Queue.empty<(ClientId, Nat)>();
-  stable var processedCount : Nat64 = 0;
+  transient let MAX_QUEUE_SIZE : Int = 333;
+  transient let MIN_CYCLE_RESERVE = 100_000_000_000_000; // 100T cycle reserve
+  transient let FEE_USD = 30; // Stripe flat fee
+  let pending = Queue.empty<(ClientId, Nat)>();
+  let failed = Queue.empty<(ClientId, Nat, Text)>();
+  let processed = Queue.empty<(ClientId, Nat)>();
+  var processedCount : Nat64 = 0;
 
 
-  public shared ({ caller }) func resetAuthorized() {
+  public shared ({ caller }) func resetAuthorized() : async () {
     assert(caller == creator);
     let (caches, stables, _) = serializedEntries;
     serializedEntries := (caches, stables, [creator]);
   };
 
-  public shared ({ caller }) func resetProcessed() {
+  public shared ({ caller }) func resetProcessed() : async () {
     assert(caller == creator);
     processedCount := 0;    
   };
 
-  public shared ({ caller }) func pumpFailed() {
+  public shared ({ caller }) func pumpFailed() : async () {
     assert(caller == creator);
     label LOOP loop {
       switch (Queue.popFront(failed)) {
@@ -234,7 +234,7 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
     await pump();
   };
 
-  stable var pumping = false;
+  var pumping = false;
   // This function must never throw.
   func pump() : async () {
     if (pumping) return;
@@ -336,19 +336,19 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
   };
 
   // Helper function only for admin.
-  public shared ({ caller }) func processOne(i: Nat64) {
+  public shared ({ caller }) func processOne(i: Nat64) : async () {
     assert(caller == creator);
     process(i);
     ignore pump();
   };
 
   // Helper function only for admin.
-  public shared ({ caller }) func processLogs() {
+  public shared ({ caller }) func processLogs() : async () {
     assert(caller == creator);
-    processNextLogs();
+    await processNextLogs();
   };
 
-  public func processNextLogs() {
+  func processNextLogs() : async () {
     var i = processedCount;
     while (i < logCount()) {
       process(i);
@@ -370,14 +370,14 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
   type Body = HttpTypes.Body;
   type JSON = JSON.JSON;
 
-  stable var serializedEntries : Server.SerializedEntries = ([], [], [creator]);
+  var serializedEntries : Server.SerializedEntries = ([], [], [creator]);
 
-  var server = Server.Server({ serializedEntries });
+  transient let server = Server.Server({ serializedEntries });
 
-  let assets = server.assets;
+  transient let assets = server.assets;
 
-  func checkout(endpoint: Text): (Request, ResponseClass) -> async* Response {
-    func(req : Request, res : ResponseClass) : async* Response {
+  func checkout(endpoint: Text): (Request, ResponseClass) -> async Response {
+    func(req : Request, res : ResponseClass) : async Response {
       let authKey = if (endpoint == "checkout") init.prodKey else init.testKey;
       let log = logger(endpoint);
       await log("headers = " # Util.headersText(req.headers));
@@ -411,7 +411,7 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
                   (400: Nat16, "Invalid signature") 
                 } else {
                   await log("body = " # JSON.show(json));
-                  if (authKey == init.prodKey) { processNextLogs() };
+                  if (authKey == init.prodKey) { await processNextLogs() };
                   (200: Nat16, "")
                 }
               }
@@ -422,7 +422,6 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
         status_code = status_code;
         body = body;
         cache_strategy = #noCache;
-        upgrade = ?true;
       })
     }
   };
@@ -435,7 +434,7 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
 
   server.get(
     "/status",
-    func(req : Request, res : ResponseClass) : async* Response {
+    func(req : Request, res : ResponseClass) : async Response {
       let (status_code, body) = switch (req.url.queryObj.get("sessionId")) {
         case null (200 : Nat16, Util.statusText(status()));
         case (?sessionId) {
@@ -594,7 +593,7 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
   public func http_request_update(req : HttpRequest) : async HttpResponse {
     var url = Option.get(Text.split(req.url, #char '?').next(), "/");
     if (Text.endsWith(url, #text "status")) { url := req.url; };
-    await* server.http_request_update({ method = req.method; url; headers = req.headers; body = req.body });
+    await server.http_request_update({ method = req.method; url; headers = req.headers; body = req.body });
   };
 
   /**
@@ -608,7 +607,7 @@ shared ({ caller = creator }) actor class CycleExpress(init: {
     ignore server.cache.pruneAll();
   };
 
-  public shared ({ caller }) func invalidate_cache() {
+  public shared ({ caller }) func invalidate_cache() : async () {
     assert(caller == creator);
     ignore server.cache.pruneAll();
   };
