@@ -25,6 +25,19 @@ Anyone can verify that the deployed Wasm hash (as well as frontend html and java
 
 Unless otherwise noted, all source codes are released under [MIT License](LICENSE).
 
+**Payment API**
+
+Third-party applications are welcome to integrate with Cycle.Express to accept fiat payment for cycles.
+A one-line Javascript below would open a new window allowing a user to buy cycles that will be sent to the target `canister_or_principal_id`:
+
+```javascript
+window.open(`https://cycle.express/?to=${canister_or_principal_id}`)
+```
+
+The target will receive either cycles or TCYCLES token (on [Cycles Ledger]), depending on whether it is a canister or a non-canister principal id.
+
+As an example, https://tipjar.rocks has integrated Cycles.Express to support topping-up cycle balances with credit cards.
+
 [Motoko]: https://github.com/dfinity/motoko
 [vessel]: https://github.com/dfinity/vessel
 [Motoko Http Server]: https://github.com/krpeacock/server
@@ -35,3 +48,4 @@ Unless otherwise noted, all source codes are released under [MIT License](LICENS
 [Stripe]: https://stripe.com
 [icx-asset]: https://github.com/dfinity/sdk/tree/main/src/canisters/frontend/icx-asset
 [ic-repl]: https://github.com/dfinity/ic-repl
+[Cycles Ledger]: https://github.com/dfinity/cycles-ledger
