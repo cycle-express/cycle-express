@@ -230,4 +230,16 @@ module Util {
     // len == 0 is the case for aaaaa-aa, which is treated as opaque.
     (len == 0) or (arr[len - 1] == 1)
   };
+
+  /**
+    * upgrade hooks
+    */
+  system func preupgrade() {
+    serializedEntries := server.entries();
+  };
+
+  system func postupgrade() {
+    ignore server.cache.pruneAll();
+  };
+
 }
